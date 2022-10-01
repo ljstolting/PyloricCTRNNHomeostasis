@@ -12,7 +12,7 @@ dt=.025
 transient = 8000 #in timesteps
 duration = 800 #time to simulate CTRNN for in seconds
 
-def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15)):
+def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
     '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. Output is its fitness as pyloric-like rhythm. Awards .05 for each oscillating neuron, and .05 for each order critereon met. Then, if all order criteria met, adds (1/z-score) for each of 15 criteria in table 1'''
     CTRNNsize = int(np.sqrt(1+len(neurongenome))-1)
     if np.all(HPgenome) == None:
@@ -54,9 +54,10 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15)):
                     PDstart1 = i
                     break
         if (PDstart1 == 0 or PDstart2 == 0):
-            print('unable to find two full cycles')
-            print('CTRNN',neurongenome)
-            print('HP',HPgenome)
+            if debugging == True:
+                print('unable to find two full cycles,may want to increase runtime')
+                print('CTRNN',neurongenome)
+                print('HP',HPgenome)
             return fitness
         #calculate the start and end times of each neuron's burst in the last full cycle
         PDend = 0 #end of PD burst
@@ -72,9 +73,9 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15)):
                 if C.ctrnn_record[0,i+1] > burst_on_thresh:
                     LPstart.append(i)
         if len(LPstart)!=1:
-            print('possible double-periodicity')
-            print('CTRNN',neurongenome)
-            print('HP',HPgenome)
+            #print('possible double-periodicity')
+            #print('CTRNN',neurongenome)
+            #print('HP',HPgenome)
             return fitness
         LPstart = LPstart[0]
         for i in range(LPstart,len(C.time)-1):
@@ -89,9 +90,9 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15)):
                 if C.ctrnn_record[1,i+1] > burst_on_thresh:
                     PYstart.append(i)
         if len(PYstart)!=1:
-            print('possible double-periodicity')
-            print('CTRNN',neurongenome)
-            print('HP',HPgenome)
+            #print('possible double-periodicity')
+            #print('CTRNN',neurongenome)
+            #print('HP',HPgenome)
             return fitness
         PYstart = PYstart[0]
         for i in range(PYstart,len(C.time)-1):

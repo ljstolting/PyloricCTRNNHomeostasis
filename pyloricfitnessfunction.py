@@ -1,3 +1,5 @@
+######Earlier Version####
+
 import numpy as np
 
 burst_on_thresh = .5 #the "firing rate threshold" at which the CTRNN neuron is considered to be "bursting"
