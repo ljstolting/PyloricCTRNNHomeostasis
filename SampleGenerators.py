@@ -40,7 +40,7 @@ biasbounds = [-16,16]
 taubounds = [.5,10]
 n = 3
 
-def randomCTRNNsample(CTRNNsize,samplesize):
+def randomCTRNNsample(CTRNNsize,samplesize,center_crossing=True):
     n = CTRNNsize
     genelength = (n**2)+(2*n)
     genomes = np.zeros((samplesize,genelength))
@@ -48,6 +48,9 @@ def randomCTRNNsample(CTRNNsize,samplesize):
         wts = np.random.uniform(low = wtbounds[0],high = wtbounds[1],size = (n**2))
         biases = np.random.uniform(low = biasbounds[0],high = biasbounds[1],size = n)
         taus = np.random.uniform(low = taubounds[0],high = taubounds[1],size = n)
-        CTRNNgenome = np.concatenate((wts,biases,taus))
+        if center_crossing == True:
+            for neuron in range(biases):
+                biases[neuron] = np.clip(-np.sum(wts[:,neuron])/2,-16,16) #set to clipped center crossing condition
+        CTRNNgenome = np.concatenate((wts,biases,taus),axis=None)
         genomes[i] = CTRNNgenome
     return genomes

@@ -11,10 +11,11 @@ def differentialapplication(wholegenome,boolean):
     for i in range(n):
         if not(boolean[i]):
             genome[(n**2)+(2*n)+i] = 0             #nullify lower bound
-            genome[(n**2)+(2*n)+i+CTRNNsize] = 1   #nullify upper bound
+            genome[(n**2)+(2*n)+i+n] = 1   #nullify upper bound
     #print(genome)
     return genome
 
+#idea : split into evolving HP and evolving CTRNNs
 class Microbial():
     #now specific to genomes of the form [neurongenome,HPgenome]
     def __init__(self, fitnessFunction, startpopulation, recombProb, mutatProb, generations, differentialapp):
