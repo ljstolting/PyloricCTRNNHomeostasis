@@ -203,6 +203,7 @@ class MicrobialHP():
         self.fitness = np.zeros(self.popsize)
         self.avgHistory = np.zeros(generations)
         self.bestHistory = np.zeros(generations)
+        self.bestindHistory = np.zeros((generations,self.genesize))
         self.gen = 0
     def showFitness(self):
         plt.plot(self.bestHistory)
@@ -218,6 +219,7 @@ class MicrobialHP():
         avgfit = np.mean(self.fitness)
         self.avgHistory[self.gen]=avgfit
         self.bestHistory[self.gen]=bestfit
+        self.bestindHistory[self.gen]=bestind
         return avgfit, bestfit, bestind
 
     def save(self,filename):

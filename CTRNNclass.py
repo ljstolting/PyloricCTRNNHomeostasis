@@ -7,8 +7,6 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 def invsigmoid(x):
     return np.log(x/(1-x))
-labels = ["LP","PY","PD"]
-paramlabels = [r"w_{11}",r"w_{12}",r"w_{13}",r"w_{21}",r"w_{22}",r"w_{23}",r"w_{31}",r"w_{32}",r"w_{33}",r"\theta_1",r"\theta_2",r"\theta_3"]
 
 class CTRNN():
 
@@ -36,7 +34,7 @@ class CTRNN():
         self.weight_record = np.zeros((size,size,len(self.time)))# track weights
         self.Inputs = np.zeros((size))                           # external input default to zero
         self.specificpars = specificpars                         # setting where you can give a list of booleans for which pars HP is allowed to change
-             
+
     def resetStepcount(self):
         self.Stepnum = 0
         
@@ -129,9 +127,17 @@ class CTRNN():
             self.updateWeights()
         self.Stepnum += 1
         
+    def run(self,adapt):
+        for i in range(len(self.time)):
+            self.ctrnnstep(adapt)
+
     def plot(self):
+        if self.Size == 3:
+            labels = ["LP","PY","PD"]
+        else:
+            labels = range(self.Size)
         for i in range(self.Size):
-            lab = labels[i]
+            lab = str(labels[i])
             plt.plot(self.time,self.ctrnn_record[i],label=lab)
         plt.plot(self.time,.5*np.ones(len(self.time)))
         plt.title("Neural Activity")
@@ -144,10 +150,10 @@ class CTRNN():
         for i in range(self.Size):
             for j in range(self.Size):
                 idx = 3*i+j
-                lab = paramlabels[idx]
-                plt.plot(self.time,self.weight_record[i,j,:],label=lab)
+                lab = r'$w_{%s%s}$'%(i,j)
+                plt.plot(self.time,self.weight_record[i,j,:],label="w%s%s"%(i,j))
         for i in range(self.Size):
             idx = i+9
-            lab = paramlabels[idx]
+            lab = r'$\theta_%s$'%idx
             plt.plot(self.time,self.bias_record[i],label=lab)
         plt.legend()
