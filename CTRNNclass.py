@@ -72,6 +72,10 @@ class CTRNN():
     def initializeState(self, s):
         self.States = np.copy(s)
         self.Outputs = sigmoid(self.States+self.Biases)
+
+    def initializeOutput(self,o):
+        self.Outputs = np.copy(o)
+        self.States = invsigmoid(o) - self.Biases
         
     def plasticFacilitationCalc(self): #calculate and update the value of rho for each neuron, using the mean firing rate from the preceding segment of runtime
         for i in range(self.Size):
