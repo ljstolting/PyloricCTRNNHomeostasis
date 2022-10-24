@@ -2,8 +2,8 @@ import numpy as np
 from CTRNNclass import *
 
 N = 3
-dt=.025
-transient = int(200/dt) #in timesteps
+dt=.1
+transient = int(100/dt) #in timesteps
 testdur = transient     #in timesteps
 
 def roc_fitness1(neurongenome,HPgenome=None,target=.5):
@@ -24,7 +24,7 @@ K = 10 #max possible fitness (arbitrary)
 target = np.array([1,1,1])  # could be different for each neuron
 
 
-def roc_fitness2(neurongenome,HPgenome):
+def roc_fitness2(neurongenome,HPgenome,plotting = False):
     '''fitness = K - sumoverneurons(|T_i - C_i/D|)
     K is the maximum possible fitness (arbitrarily set a large enough number, for now 10),
     N are the number of neurons in the circuit (testing only with 3-neuron circuits for now), 
@@ -43,6 +43,9 @@ def roc_fitness2(neurongenome,HPgenome):
     for n in range(N):
         acc_roc = np.sum(np.abs(np.diff(C.ctrnn_record[-testdur:])))/dt
         preHPfitness -= np.abs(target[n]-(acc_roc/testdur))
+    if plotting:
+        C.plot()
+        print('preHPfitness=',preHPfitness)
     C = CTRNN(N,dt,(testdur*dt),HPgenome,neurongenome) #HP on, no transient
     C.initializeOutput(np.ones(N)*.5)
     for i in range(len(C.time)):
@@ -51,6 +54,10 @@ def roc_fitness2(neurongenome,HPgenome):
     for n in range(N):
         acc_roc = np.sum(np.abs(np.diff(C.ctrnn_record[-testdur:])))/dt
         HPonfitness -= np.abs(target[n]-(acc_roc/testdur))
+    if plotting:
+        C.plot()
+        C.plotparams()
+        print('HPonfitness=',HPonfitness)
     return np.mean((preHPfitness,HPonfitness))
 
 

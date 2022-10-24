@@ -149,6 +149,7 @@ class CTRNN():
         plt.ylabel("Firing Rate")
         plt.rcParams["figure.figsize"] = (20,3)
         plt.legend()
+        plt.show()
         
     def plotparams(self):
         for i in range(self.Size):
@@ -159,5 +160,6 @@ class CTRNN():
         for i in range(self.Size):
             idx = i+9
             lab = r'$\theta_%s$'%idx
-            plt.plot(self.time,self.bias_record[i],label=lab)
+            plt.plot(self.time,self.bias_record[i-N**2],label=lab)
         plt.legend()
+        plt.show()

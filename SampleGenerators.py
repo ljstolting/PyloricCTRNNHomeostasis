@@ -35,10 +35,9 @@ def randomHPsample(CTRNNsize, samplesize):
     return genomes
 
 ###### CTRNN base state sample params ########
-wtbounds = [-16,16]
-biasbounds = [-16,16]
-taubounds = [.5,10]
-n = 3
+wtbounds = [-10,10]
+biasbounds = [-10,10]
+taubounds = [1,2]
 
 def randomCTRNNsample(CTRNNsize,samplesize,center_crossing=True):
     n = CTRNNsize
