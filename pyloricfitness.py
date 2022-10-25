@@ -12,7 +12,9 @@ transient = 4000 #in timesteps
 duration = 400 #time to simulate CTRNN for in seconds
 
 def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
-    '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. Output is its fitness as pyloric-like rhythm. Awards .05 for each oscillating neuron, and .05 for each order critereon met. Then, if all order criteria met, adds (1/z-score) for each of 15 criteria in table 1'''
+    '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. 
+    Output is its fitness as pyloric-like rhythm. Awards .05 for each oscillating neuron, and .05 for each 
+    order critereon met. Then, if all order criteria met, adds (1/z-score) for each of 15 criteria in table 1'''
     CTRNNsize = int(np.sqrt(1+len(neurongenome))-1)
     if np.all(HPgenome) == None:
         #print('You have not specified an HP genome, so HP will not be used')
@@ -118,13 +120,18 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
             period = PDstart2 - PDstart1
             LPdutycycle = (LPend-LPstart)/period #burstduration/period
             LPdutycyclezscore = abs(LPdutycycle - .264)/.059
+            print(LPdutycyclezscore)
             PYdutycycle = (PYend-PYstart)/period #burstduration/period
             PYdutycyclezscore = abs(PYdutycycle - .348)/.054
+            print(PYdutycyclezscore)
             PDdutycycle = (PDend-PDstart1)/period #burstduration/period
             PDdutycyclezscore = abs(PDdutycycle - .385)/.040
+            print(PDdutycyclezscore)
             LPstartphase = (LPstart-PDstart1)/period #delay/period
             LPstartphasezscore = abs(LPstartphase - .533)/.054
+            print(LPstartphasezscore)
             PYstartphase = (PYstart-PDstart1)/period #delay/period
             PYstartphasezscore = abs(PYstartphase - .758)/.060
+            print(PYstartphasezscore)
             fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
     return fitness

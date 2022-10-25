@@ -143,8 +143,7 @@ class MicrobialCTRNN():
 
     def save(self,filename):
         af,bf,bi = self.fitStats()
-        np.savetext(filename,np.array([self.avgHistory,self.bestHistory]))
-        return bi
+        np.savez(filename, avghist=self.avgHistory, besthist=self.bestHistory, bestind=bi)
 
     def run(self):
         # Calculate all fitness once
