@@ -5,12 +5,11 @@ from CTRNNclass import *
 
 burst_on_thresh = .5 #the "firing rate threshold" at which the CTRNN neuron is considered to be "bursting"
 burst_off_thresh = .45  #the "firing rate" at which the neuron is considered to be effectively silent (just used to determine if oscillation is wide enough)
-HP = 1  #toggle whether to use HP or not 
 
 initial_states = np.array([3.,3.,3.])  #initial states of the neurons
 dt=.025
-transient = 8000 #in timesteps
-duration = 800 #time to simulate CTRNN for in seconds
+transient = 4000 #in timesteps
+duration = 400 #time to simulate CTRNN for in seconds
 
 def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
     '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. Output is its fitness as pyloric-like rhythm. Awards .05 for each oscillating neuron, and .05 for each order critereon met. Then, if all order criteria met, adds (1/z-score) for each of 15 criteria in table 1'''
@@ -19,11 +18,12 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
         #print('You have not specified an HP genome, so HP will not be used')
         HPgenome = np.ones(2*CTRNNsize+3)
         HPgenome[0:CTRNNsize] = 0
+        HP = 0
     C = CTRNN(CTRNNsize,dt,duration,HPgenome,neurongenome,specificpars)
     C.initializeState(initial_states)
     C.resetStepcount()
     for i in range(len(C.time)):        #run the CTRNN for the allotted duration
-        C.ctrnnstep(HP) #could be applying HP, but if not otherwise specified then the target ranges will be set to null (slightly slow)
+        C.ctrnnstep(HP)
     #check if first three neurons were oscillating (all the way from silent to burst) by the end of the run
     osc = np.zeros(3)
     for i in range(3):
@@ -57,7 +57,7 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
             if debugging == True:
                 print('unable to find two full cycles,may want to increase runtime')
                 print('CTRNN',neurongenome)
-                print('HP',HPgenome)
+                #print('HP',HPgenome)
             return fitness
         #calculate the start and end times of each neuron's burst in the last full cycle
         PDend = 0 #end of PD burst
@@ -73,9 +73,10 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
                 if C.ctrnn_record[0,i+1] > burst_on_thresh:
                     LPstart.append(i)
         if len(LPstart)!=1:
-            #print('possible double-periodicity')
-            #print('CTRNN',neurongenome)
-            #print('HP',HPgenome)
+            if debugging == True:
+                print('possible double-periodicity')
+                print('CTRNN',neurongenome)
+                #print('HP',HPgenome)
             return fitness
         LPstart = LPstart[0]
         for i in range(LPstart,len(C.time)-1):
@@ -90,9 +91,10 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
                 if C.ctrnn_record[1,i+1] > burst_on_thresh:
                     PYstart.append(i)
         if len(PYstart)!=1:
-            #print('possible double-periodicity')
-            #print('CTRNN',neurongenome)
-            #print('HP',HPgenome)
+            if debugging == True:
+                print('possible double-periodicity')
+                print('CTRNN',neurongenome)
+                #print('HP',HPgenome)
             return fitness
         PYstart = PYstart[0]
         for i in range(PYstart,len(C.time)-1):

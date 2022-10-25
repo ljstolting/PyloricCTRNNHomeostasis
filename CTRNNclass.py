@@ -156,10 +156,11 @@ class CTRNN():
             for j in range(self.Size):
                 idx = 3*i+j
                 lab = r'$w_{%s%s}$'%(i,j)
-                plt.plot(self.time,self.weight_record[i,j,:],label="w%s%s"%(i,j))
+                plt.plot(self.time,self.weight_record[i,j,:],label=r"w_{%s%s}"%(i,j))
         for i in range(self.Size):
-            idx = i+9
-            lab = r'$\theta_%s$'%idx
-            plt.plot(self.time,self.bias_record[i-N**2],label=lab)
+            plt.plot(self.time,self.bias_record[i,:],label=r'$\theta_%s$'%i)
+        plt.plot("CTRNN Parameters")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Param. Value")
         plt.legend()
         plt.show()

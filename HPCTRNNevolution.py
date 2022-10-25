@@ -103,9 +103,9 @@ class MicrobialHPCTRNN():
                 print(np.max(self.fitness))
         return self.pop
 
-wtbounds = [-16,16]
-biasbounds = [-16,16]
-taubounds = [.5,10]
+wtbounds = [-10,10]
+biasbounds = [-10,10]
+taubounds = [1,2]
 
 class MicrobialCTRNN():
     '''evolving only the base state (CTRNN parameters) with consistent HP mechanism specified in fitnessFunction '''
@@ -143,7 +143,8 @@ class MicrobialCTRNN():
 
     def save(self,filename):
         af,bf,bi = self.fitStats()
-        np.savez(filename, avghist=self.avgHistory, besthist=self.bestHistory, bestind=bi)
+        np.savetext(filename,np.array([self.avgHistory,self.bestHistory]))
+        return bi
 
     def run(self):
         # Calculate all fitness once
@@ -178,8 +179,8 @@ class MicrobialCTRNN():
                 # Save fitness
                 self.fitness[loser] = self.fitnessFunction(self.pop[loser])
             if self.gen%20 == 0:
-                print(self.gen)
-                print(np.max(self.fitness))
+                print('generation',self.gen)
+                print('fitness:',np.max(self.fitness))
         return self.pop
 
 taubbounds = [15,25]
