@@ -150,7 +150,7 @@ def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debuggi
     C.resetStepcount()
     for i in range(len(C.time)):
         C.ctrnnstep(HP)
-    fitness = 0
+    fitness = 0.0
     #check if all neurons were oscillating around the bursting threshold
     osc = np.zeros(3)
     for i in range(3):

@@ -121,7 +121,7 @@ class EvolSearch:
 
         replace_indices = np.random.choice([False, True], size=np.shape(mutated_elites), p=[1-self.mutation_variance, self.mutation_variance])
         
-        ctrnn_size = np.sqrt(1+self.genotype_size) - 1
+        ctrnn_size = int(np.sqrt(1+self.genotype_size) - 1)
         mutation_pop = randomCTRNNsample(ctrnn_size,len(mutated_elites))
 
         mutated_elites[replace_indices] = mutation_pop[replace_indices]   #now built to work on genomes with the values of the parameters

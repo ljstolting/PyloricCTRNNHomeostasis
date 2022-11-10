@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 
 from CTRNNclass import CTRNN
@@ -37,20 +37,20 @@ settings = {
 # Evolve Solutions
 ########################
 
-pop_size = 15
-genotype_size = ctrnn_size**2+2*ctrnn_size
+pop_size = 20
+genotype_size = int(ctrnn_size**2+2*ctrnn_size)
 
 
 evol_params = {
-    "num_processes": 1,
+    "num_processes": 5,
     "pop_size": pop_size,  # population size
     "genotype_size": genotype_size,  # dimensionality of solution
-    "fitness_function": lambda neurongenome: pyloriclike(neurongenome),  # custom function defined to evaluate fitness of a solution
+    "fitness_function": lambda neurongenome: pyloricfitness(neurongenome),  # custom function defined to evaluate fitness of a solution
     "elitist_fraction": 0.1,  # fraction of population retained as is between generation
     "mutation_variance": 0.05,  # mutation noise added to offspring.
 }
 
-initial_pop = randomCTRNNsample(ctrnn_size,pop_size)
+initial_pop = randomCTRNNsample(ctrnn_size,pop_size,center_crossing=True)
 if use_best_individual:
     initial_pop[0] = best_individual["params"]
 
@@ -63,7 +63,7 @@ save_best_individual = {
    "settings": settings,
 }
 
-for i in range(40):
+for i in range(100):
     evolution.step_generation()
     
     save_best_individual["params"] = evolution.get_best_individual()
