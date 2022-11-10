@@ -3,7 +3,7 @@ import numpy as np
 
 from CTRNNclass import CTRNN
 from EvolSearch import EvolSearch
-from pyloricfitness import pyloriclike
+from pyloricfitness import *
 from SampleGenerators import randomCTRNNsample
 
 import pickle
@@ -38,11 +38,11 @@ settings = {
 ########################
 
 pop_size = 15
-genotype_size = ctrnn_size
+genotype_size = ctrnn_size**2+2*ctrnn_size
 
 
 evol_params = {
-    "num_processes": 5,
+    "num_processes": 1,
     "pop_size": pop_size,  # population size
     "genotype_size": genotype_size,  # dimensionality of solution
     "fitness_function": lambda neurongenome: pyloriclike(neurongenome),  # custom function defined to evaluate fitness of a solution

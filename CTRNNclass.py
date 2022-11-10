@@ -11,6 +11,9 @@ def invsigmoid(x):
 class CTRNN():
 
     def __init__(self,size,dt,duration,HPgenome,neurongenome,specificpars = np.ones(15)):
+        if np.all(HPgenome) == None:
+            HPgenome = np.ones(2*size+3)
+            HPgenome[0:size] = 0
         self.Size = size                                         # number of neurons in the circuit
         self.States = np.ones(size)                              # state of the neurons
         self.Outputs = np.zeros(size)                            # neuron outputs

@@ -55,7 +55,7 @@ class EvolSearch:
 
         # validating fitness function
         assert self.fitness_function, "Invalid fitness_function"
-        rand_genotype = np.random.rand(self.genotype_size)
+        rand_genotype = randomCTRNNsample(3,1,center_crossing=False)[0]
         rand_genotype_fitness = self.fitness_function(rand_genotype)
         assert (
             type(rand_genotype_fitness) == type(0.0)

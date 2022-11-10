@@ -1,4 +1,5 @@
 import numpy as np
+
 from CTRNNclass import *
 
 #####To do: make doubly periodic solutions not count##########
@@ -120,18 +121,128 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
             period = PDstart2 - PDstart1
             LPdutycycle = (LPend-LPstart)/period #burstduration/period
             LPdutycyclezscore = abs(LPdutycycle - .264)/.059
-            print(LPdutycyclezscore)
             PYdutycycle = (PYend-PYstart)/period #burstduration/period
             PYdutycyclezscore = abs(PYdutycycle - .348)/.054
-            print(PYdutycyclezscore)
             PDdutycycle = (PDend-PDstart1)/period #burstduration/period
             PDdutycyclezscore = abs(PDdutycycle - .385)/.040
-            print(PDdutycyclezscore)
             LPstartphase = (LPstart-PDstart1)/period #delay/period
             LPstartphasezscore = abs(LPstartphase - .533)/.054
-            print(LPstartphasezscore)
             PYstartphase = (PYstart-PDstart1)/period #delay/period
             PYstartphasezscore = abs(PYstartphase - .758)/.060
-            print(PYstartphasezscore)
+            if debugging == True:
+                print('LPdutycyclezscore ',LPdutycyclezscore)
+                print('PYdutycyclezscore ',PYdutycyclezscore)
+                print('PDdutycyclezscore ',PDdutycyclezscore)
+                print('LPstartphasezscore ',LPstartphasezscore)
+                print('PYstartphasezscore ',PYstartphasezscore)
             fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
+    return fitness
+
+def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
+    '''New, continuous pyloric fitness function without discrete requirements'''
+    CTRNNsize = int(np.sqrt(1+len(neurongenome))-1)
+    if np.all(HPgenome) == None:
+        HPgenome = np.ones(2*CTRNNsize+3)
+        HPgenome[0:CTRNNsize] = 0
+        HP = 0
+    C = CTRNN(CTRNNsize,dt,duration,HPgenome,neurongenome,specificpars)
+    C.initializeState(initial_states)
+    C.resetStepcount()
+    for i in range(len(C.time)):
+        C.ctrnnstep(HP)
+    fitness = 0
+    #check if all neurons were oscillating around the bursting threshold
+    osc = np.zeros(3)
+    for i in range(3):
+        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh:
+            if min(C.ctrnn_record[i,transient:]) < burst_on_thresh:
+                osc[i] = 1
+    if np.all(osc):
+        #LP = N1, PY = N2, PD = N3
+        #Scan to find second to last full PD cycle
+        PDstart3 = 0
+        PDstart2 = 0
+        PDstart1 = 0
+        for i in range(len(C.time))[:transient:-1]:
+            if C.ctrnn_record[2,i] > burst_on_thresh:
+                if C.ctrnn_record[2,i-1] < burst_on_thresh:
+                    PDstart3 = i
+                    break
+        for i in range(PDstart3)[:transient:-1]:
+            if C.ctrnn_record[2,i] > burst_on_thresh:
+                if C.ctrnn_record[2,i-1] < burst_on_thresh:
+                    PDstart2 = i
+                    break
+        for i in range(PDstart2)[:transient:-1]:
+            if C.ctrnn_record[2,i] > burst_on_thresh:
+                if C.ctrnn_record[2,i-1] < burst_on_thresh:
+                    PDstart1 = i
+                    break
+        if (PDstart1 == 0 or PDstart2 == 0):
+            if debugging == True:
+                print('unable to find two full cycles,may want to increase runtime')
+                print('CTRNN',neurongenome)
+                #print('HP',HPgenome)
+            return fitness
+        #calculate the start and end times of each neuron's burst in the last full cycle
+        PDend = 0 #end of PD burst
+        for i in range(PDstart1,PDstart2): 
+            if C.ctrnn_record[2,i] > burst_on_thresh:
+                if C.ctrnn_record[2,i+1] < burst_on_thresh:
+                    PDend = i
+                    break
+        LPstart = []
+        LPend = 0
+        for i in range(PDstart1,PDstart2-1):
+            if C.ctrnn_record[0,i] < burst_on_thresh:
+                if C.ctrnn_record[0,i+1] > burst_on_thresh:
+                    LPstart.append(i)
+        if len(LPstart)!=1:
+            if debugging == True:
+                print('possible double-periodicity')
+                print('CTRNN',neurongenome)
+                #print('HP',HPgenome)
+            return fitness
+        LPstart = LPstart[0]
+        for i in range(LPstart,len(C.time)-1):
+            if C.ctrnn_record[0,i] > burst_on_thresh:
+                if C.ctrnn_record[0,i+1] < burst_on_thresh:
+                    LPend = i
+                    break
+        PYstart = []
+        PYend = 0
+        for i in range(PDstart1,PDstart2-1):
+            if C.ctrnn_record[1,i] < burst_on_thresh:
+                if C.ctrnn_record[1,i+1] > burst_on_thresh:
+                    PYstart.append(i)
+        if len(PYstart)!=1:
+            if debugging == True:
+                print('possible double-periodicity')
+                print('CTRNN',neurongenome)
+                #print('HP',HPgenome)
+            return fitness
+        PYstart = PYstart[0]
+        for i in range(PYstart,len(C.time)-1):
+            if C.ctrnn_record[1,i] > burst_on_thresh:
+                if C.ctrnn_record[1,i+1] < burst_on_thresh:
+                    PYend = i
+                    break
+        period = PDstart2 - PDstart1
+        LPdutycycle = (LPend-LPstart)/period #burstduration/period
+        LPdutycyclezscore = abs(LPdutycycle - .264)/.059
+        PYdutycycle = (PYend-PYstart)/period #burstduration/period
+        PYdutycyclezscore = abs(PYdutycycle - .348)/.054
+        PDdutycycle = (PDend-PDstart1)/period #burstduration/period
+        PDdutycyclezscore = abs(PDdutycycle - .385)/.040
+        LPstartphase = (LPstart-PDstart1)/period #delay/period
+        LPstartphasezscore = abs(LPstartphase - .533)/.054
+        PYstartphase = (PYstart-PDstart1)/period #delay/period
+        PYstartphasezscore = abs(PYstartphase - .758)/.060
+        if debugging == True:
+            print('LPdutycyclezscore ',LPdutycyclezscore)
+            print('PYdutycyclezscore ',PYdutycyclezscore)
+            print('PDdutycyclezscore ',PDdutycyclezscore)
+            print('LPstartphasezscore ',LPstartphasezscore)
+            print('PYstartphasezscore ',PYstartphasezscore)
+        fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
     return fitness
