@@ -8,8 +8,9 @@ burst_on_thresh = .5 #the "firing rate threshold" at which the CTRNN neuron is c
 burst_off_thresh = .45  #the "firing rate" at which the neuron is considered to be effectively silent (just used to determine if oscillation is wide enough)
 
 initial_states = np.array([3.,3.,3.])  #initial states of the neurons
-dt=.025
-transient = 4000 #in timesteps
+dt=.01
+transientdur = 100 #in seconds
+transient = int(transientdur/dt) #in timesteps
 duration = 400 #time to simulate CTRNN for in seconds
 
 def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
@@ -30,8 +31,8 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
     #check if first three neurons were oscillating (all the way from silent to burst) by the end of the run
     osc = np.zeros(3)
     for i in range(3):
-        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh:
-            if min(C.ctrnn_record[i,transient:]) < burst_off_thresh:
+        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh+.025:
+            if min(C.ctrnn_record[i,transient:]) < burst_off_thresh-.025:
                 osc[i] = 1
     #print(osc)
     fitness = sum(osc)*0.05 #initialize a fitness value based on how many neurons oscillate sufficiently
@@ -154,8 +155,8 @@ def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debuggi
     #check if all neurons were oscillating around the bursting threshold
     osc = np.zeros(3)
     for i in range(3):
-        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh:
-            if min(C.ctrnn_record[i,transient:]) < burst_on_thresh:
+        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh+.025:
+            if min(C.ctrnn_record[i,transient:]) < burst_on_thresh-.025:
                 osc[i] = 1
     if np.all(osc):
         #LP = N1, PY = N2, PD = N3
