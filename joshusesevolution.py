@@ -50,7 +50,7 @@ evol_params = {
     "mutation_variance": 0.05,  # mutation noise added to offspring.
 }
 
-for n in range(2):
+for n in range(10):
     initial_pop = randomCTRNNsample(ctrnn_size,pop_size,center_crossing=True)
     if use_best_individual:
         initial_pop[0] = best_individual["params"]
@@ -77,6 +77,6 @@ for n in range(2):
             save_best_individual["mean_fitness"][-1]
         )
 
-        with open("best_individual", "wb") as f:
-            pickle.dump(save_best_individual, f)
+    with open("superevol%i"%n, "wb") as f:
+        pickle.dump(save_best_individual, f)
 
