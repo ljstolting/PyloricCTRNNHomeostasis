@@ -42,7 +42,7 @@ genotype_size = int(ctrnn_size**2+2*ctrnn_size)
 
 
 evol_params = {
-    "num_processes": 10,
+    "num_processes": 5,
     "pop_size": pop_size,  # population size
     "genotype_size": genotype_size,  # dimensionality of solution
     "fitness_function": lambda neurongenome: pyloricfitness(neurongenome),  # custom function defined to evaluate fitness of a solution
@@ -50,7 +50,7 @@ evol_params = {
     "mutation_variance": 0.05,  # mutation noise added to offspring.
 }
 
-for n in range(10):
+for n in range(1):
     initial_pop = randomCTRNNsample(ctrnn_size,pop_size,center_crossing=True)
     if use_best_individual:
         initial_pop[0] = best_individual["params"]
