@@ -80,5 +80,5 @@ for n in range(1):
     with open("superevol%i"%n, "wb") as f:
         pickle.dump(save_best_individual, f)
 
-    print(evolution.get_best_individual)
+    print(evolution.get_best_individual())
 
