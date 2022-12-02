@@ -15,6 +15,7 @@ with (open("superevol0", "rb")) as openfile:
 
 for i in range(len(objects)):
     evol = objects[i]
+    print('params',evol['params'])
     print(pyloricfitness(evol['params'],debugging=True))
     plt.plot(np.arange(1,31,1),evol["best_fitness"])
     plt.plot(np.arange(1,31,1),evol["mean_fitness"])
