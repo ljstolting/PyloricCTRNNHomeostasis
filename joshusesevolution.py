@@ -63,7 +63,7 @@ for n in range(1):
     "mean_fitness": [],
     "settings": settings,
     }
-    for gen in range(100):
+    for gen in range(30):
         evolution.step_generation()
         
         save_best_individual["params"] = evolution.get_best_individual()
