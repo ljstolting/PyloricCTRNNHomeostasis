@@ -16,8 +16,8 @@ const double WEIGHTNOISE = 1.0;
 const double BIASNOISE = 1.0;
 
 // EA params
-const int POPSIZE = 96;
-const int GENS = 200;
+const int POPSIZE = 20;
+const int GENS = 100;
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -68,9 +68,9 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 }
 
 // ------------------------------------
-// Fitness function
+// Rate of Change Fitness function
 // ------------------------------------
-double FitnessFunction(TVector<double> &genotype, RandomState &rs)
+double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 {
 	// Map genootype to phenotype
 	TVector<double> phenotype;
@@ -81,82 +81,63 @@ double FitnessFunction(TVector<double> &genotype, RandomState &rs)
 	TVector<double> CumRateChange(1,N);
 	double totalfit = 0.0, perf;
 	int trials = 0;
+	
+	// Create the agent
+	CTRNN Agent;
 
-	for (double GP = -1.0; GP <= 1.0; GP += 0.1) {
-		// Create the agent
-		CTRNN Agent;
-
-		// Instantiate the nervous system
-		Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
-		int k = 1;
-		// Time-constants
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronTimeConstant(i,phenotype(k));
-			k++;
-		}
-		// Bias
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronBias(i,phenotype(k)+GP);
-			k++;
-		}
-		// Weights
-		for (int i = 1; i <= N; i++) {
-				for (int j = 1; j <= N; j++) {
-					Agent.SetConnectionWeight(i,j,phenotype(k)+GP);
-					k++;
-				}
-		}
-
-		// Initialize the state at an output of 0.5 for all neurons in the circuit
-		Agent.RandomizeCircuitOutput(0.5, 0.5);
-
-		// Run the circuit for an initial transient, HP is off, and Fitness is not evaluated
-		for (double time = StepSize; time <= TransientDuration; time += StepSize) {
-			Agent.EulerStep(StepSize);
-		}
-
-		// Run the circuit to calculate whether it's oscillating or not, before HP is turned ON.
-		CumRateChange.FillContents(0.0);
-		for (double time = StepSize; time <= RunDuration; time += StepSize) {
-			for (int i = 1; i <= N; i += 1) {
-				pastNeuronOutput[i] = Agent.NeuronOutput(i);
-			}
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
-			}
-		}
-		perf = 0.0;
-		for (int i = 1; i <= N; i += 1) {
-			perf += abs(Target - (CumRateChange[i]/RunDuration));
-		}
-		perf = 10 - perf; 
-		totalfit += perf;
-
-		// Turn plasticity ON
-		for (int i = 1; i <= N; i += 1) {
-			Agent.SetPlasticityBoundary(i,B);
-		}
-
-		// Run the circuit to calculate whether it's oscillating or not, before HP is turned ON.
-		CumRateChange.FillContents(0.0);
-		for (double time = StepSize; time <= RunDuration; time += StepSize) {
-			for (int i = 1; i <= N; i += 1) {
-				pastNeuronOutput[i] = Agent.NeuronOutput(i);
-			}
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
-			}
-		}
-		perf = 0.0;
-		for (int i = 1; i <= N; i += 1) {
-			perf += abs(Target - (CumRateChange[i]/RunDuration));
-		}
-		perf = 10 - perf; 
-		totalfit += perf;
-		trials+=2;
+	// Instantiate the nervous system
+	Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
+	int k = 1;
+	// Time-constants
+	for (int i = 1; i <= N; i++) {
+		Agent.SetNeuronTimeConstant(i,phenotype(k));
+		k++;
 	}
+	// Bias
+	for (int i = 1; i <= N; i++) {
+		Agent.SetNeuronBias(i,phenotype(k));
+		k++;
+	}
+	// Weights
+	for (int i = 1; i <= N; i++) {
+			for (int j = 1; j <= N; j++) {
+				Agent.SetConnectionWeight(i,j,phenotype(k));
+				k++;
+			}
+	}
+
+	// Initialize the state at an output of 0.5 for all neurons in the circuit
+	Agent.RandomizeCircuitOutput(0.5, 0.5);
+
+	// Turn plasticity ON
+	for (int i = 1; i <= N; i += 1) {
+		Agent.SetPlasticityBoundary(i,B);
+	}
+
+	// Run the circuit for an initial transient, HP is on, but fitness is not evaluated
+	for (double time = StepSize; time <= TransientDuration; time += StepSize) {
+		Agent.EulerStep(StepSize);
+	}
+
+	// Run the circuit to calculate Pyloric fitness while HP is turned ON.
+	CumRateChange.FillContents(0.0);
+	for (double time = StepSize; time <= RunDuration; time += StepSize) {
+		for (int i = 1; i <= N; i += 1) {
+			pastNeuronOutput[i] = Agent.NeuronOutput(i);
+		}
+		Agent.EulerStep(StepSize);
+		for (int i = 1; i <= N; i += 1) {
+			CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
+		}
+	}
+	perf = 0.0;
+	for (int i = 1; i <= N; i += 1) {
+		perf += abs(Target - (CumRateChange[i]/RunDuration));
+	}
+	perf = 10 - perf; 
+	totalfit += perf;
+	trials+=2;
+
 	return (totalfit / trials);
 }
 
@@ -258,8 +239,6 @@ void Performance(TVector<double> &genotype)
 {
 	RandomState rs;
 	ofstream perffileWith("perf_with.dat");
-	ofstream perffileWithout("perf_without.dat");
-	ofstream perffileBackOff("perf_backoff.dat");	
 
 	// Map genootype to phenotype
 	TVector<double> phenotype;
@@ -271,110 +250,64 @@ void Performance(TVector<double> &genotype)
 	double totalfit = 0.0, perf;
 	int trials = 0;
 
-	// For each circuit, repeat the experiment for different TEMPERATURES (global pertubation)
-	for (double GP = -1.0; GP <= 1.1; GP += 0.05) {
+	// Create the agent
+	CTRNN Agent;
 
-		// Create the agent
-		CTRNN Agent;
-
-		// Instantiate the nervous system
-		Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
-		int k = 1;
-		// Time-constants
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronTimeConstant(i,phenotype(k));
-			k++;
-		}
-		// Bias
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronBias(i,phenotype(k)+GP);
-			k++;
-		}
-		// Weights
-		for (int i = 1; i <= N; i++) {
-				for (int j = 1; j <= N; j++) {
-					Agent.SetConnectionWeight(i,j,phenotype(k)+GP);
-					k++;
-				}
-		}
-
-		// Initialize the state at an output of 0.5 for all neurons in the circuit
-		Agent.RandomizeCircuitOutput(0.5, 0.5);
-
-		// Run the circuit for an initial transient, HP is off, and Fitness is not evaluated
-		for (double time = StepSize; time <= TransientDuration; time += StepSize) {
-			Agent.EulerStep(StepSize);
-		}
-
-		// Run the circuit to calculate whether it's oscillating or not, before HP is turned ON.
-		CumRateChange.FillContents(0.0);
-		for (double time = StepSize; time <= RunDurationAnalysis; time += StepSize) {
-			for (int i = 1; i <= N; i += 1) {
-				pastNeuronOutput[i] = Agent.NeuronOutput(i);
-			}
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
-			}
-		}
-		perf = 0.0;
-		for (int i = 1; i <= N; i += 1) {
-			perf += abs(Target - (CumRateChange[i]/RunDurationAnalysis));
-		}
-		perf = 10 - perf; 
-		perffileWithout << GP << " " << perf << endl;
-
-		// Turn plasticity ON
-		for (int i = 1; i <= N; i += 1) {
-			Agent.SetPlasticityBoundary(i,B);
-		}
-
-		// Run the circuit to calculate whether it's oscillating or not, before HP is turned ON.
-		CumRateChange.FillContents(0.0);
-		for (double time = StepSize; time <= RunDurationAnalysis; time += StepSize) {
-			for (int i = 1; i <= N; i += 1) {
-				pastNeuronOutput[i] = Agent.NeuronOutput(i);
-			}
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
-			}
-		}
-		perf = 0.0;
-		for (int i = 1; i <= N; i += 1) {
-			perf += abs(Target - (CumRateChange[i]/RunDurationAnalysis));
-		}
-		perf = 10 - perf; 
-		perffileWith << GP << " " << perf << endl;
-
-
-		// Turn plasticity OFF again
-		for (int i = 1; i <= N; i += 1) {
-			Agent.SetPlasticityBoundary(i,0.0);
-		}
-
-		// Run the circuit to calculate whether it's oscillating or not, before HP is turned ON.
-		CumRateChange.FillContents(0.0);
-		for (double time = StepSize; time <= RunDurationAnalysis; time += StepSize) {
-			for (int i = 1; i <= N; i += 1) {
-				pastNeuronOutput[i] = Agent.NeuronOutput(i);
-			}
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
-			}
-		}
-		perf = 0.0;
-		for (int i = 1; i <= N; i += 1) {
-			perf += abs(Target - (CumRateChange[i]/RunDurationAnalysis));
-		}
-		perf = 10 - perf; 
-		perffileBackOff << GP << " " << perf << endl;
-
+	// Instantiate the nervous system
+	Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
+	int k = 1;
+	// Time-constants
+	for (int i = 1; i <= N; i++) {
+		Agent.SetNeuronTimeConstant(i,phenotype(k));
+		k++;
 	}
-	perffileWith.close();
-	perffileWithout.close();
-	perffileBackOff.close();	
+	// Bias
+	for (int i = 1; i <= N; i++) {
+		Agent.SetNeuronBias(i,phenotype(k));
+		k++;
+	}
+	// Weights
+	for (int i = 1; i <= N; i++) {
+			for (int j = 1; j <= N; j++) {
+				Agent.SetConnectionWeight(i,j,phenotype(k));
+				k++;
+			}
+	}
+
+	// Turn plasticity ON
+	for (int i = 1; i <= N; i += 1) {
+		Agent.SetPlasticityBoundary(i,B);
+	}
+
+	// Initialize the state at an output of 0.5 for all neurons in the circuit
+	Agent.RandomizeCircuitOutput(0.5, 0.5);
+
+	// Run the circuit for an initial transient, HP is on, but Fitness is not evaluated
+	for (double time = StepSize; time <= TransientDuration; time += StepSize) {
+		Agent.EulerStep(StepSize);
+	}
+
+	// Run the circuit to calculate Pyloric fitness while HP is turned ON.
+	CumRateChange.FillContents(0.0);
+	for (double time = StepSize; time <= RunDurationAnalysis; time += StepSize) {
+		for (int i = 1; i <= N; i += 1) {
+			pastNeuronOutput[i] = Agent.NeuronOutput(i);
+		}
+		Agent.EulerStep(StepSize);
+		for (int i = 1; i <= N; i += 1) {
+			CumRateChange[i] += abs((Agent.NeuronOutput(i) - pastNeuronOutput[i])/StepSize);
+		}
+	}
+	perf = 0.0;
+	for (int i = 1; i <= N; i += 1) {
+		perf += abs(Target - (CumRateChange[i]/RunDurationAnalysis));
+	}
+	perf = 10 - perf; 
+	perffileWith << perf << endl;
+
+
+
+	perffileWith.close();	
 }
 
 // ------------------------------------
@@ -429,7 +362,7 @@ int main (int argc, const char* argv[])
 	s.SetSearchConstraint(1);
 	s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
-	s.SetEvaluationFunction(FitnessFunction);
+	s.SetEvaluationFunction(PyloricFitnessFunction);
 	s.ExecuteSearch();
 
 	ifstream genefile("best.gen.dat");

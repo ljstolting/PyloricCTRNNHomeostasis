@@ -1,17 +1,7 @@
 // ************************************************************
-// A class for continuous-time recurrent neural networks
+// HPCTRNN evolution based on Pyloric Fitness
 //
-// RDB
-//  8/94 Created
-//  12/98 Optimized integration
-//  1/08 Added table-based fast sigmoid w/ linear interpolation
-//
-// To Do
-//   1. Could optimize a bit further by making StepSize
-//      a CTRNN parameter and prescaling RTaus and
-//      by providing versions of EulerStep and RK4Step
-//      that ignore gains, but it's not clear that the
-//      few percent speed increase is really worth it.
+// Lindsay Stolting 12/8/22
 // ************************************************************
 
 #include "CTRNN.h"
@@ -119,9 +109,9 @@ void CTRNN::SetCircuitSize(int newsize, int newwindowsize, double b, double bt, 
   // NEW for AVERAGING
   windowsize = newwindowsize;
   avgoutputs.SetBounds(1,size);
-  avgoutputs.FillContents(0.0);
+  avgoutputs.FillContents(b+.01); //works for now while the boundaries do not differ for the different neurons
   outputhist.SetBounds(1,size,1,windowsize);
-  outputhist.FillContents(0.0);
+  outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
 
   // NEW for CAPPING
   wr = newwr;
@@ -140,9 +130,9 @@ void CTRNN::RandomizeCircuitState(double lb, double ub)
 	for (int i = 1; i <= size; i++)
         SetNeuronState(i, UniformRandom(lb, ub));
   // Fill the window with the first value
-  for (int i = 1; i <= size; i++)
-    for (int k = 1; k <= windowsize; k++)
-      outputhist[i][k] = NeuronOutput(i);
+//  for (int i = 1; i <= size; i++)
+//    for (int k = 1; k <= windowsize; k++)
+//      outputhist[i][k] = NeuronOutput(i);
 }
 
 void CTRNN::RandomizeCircuitState(double lb, double ub, RandomState &rs)
@@ -150,9 +140,9 @@ void CTRNN::RandomizeCircuitState(double lb, double ub, RandomState &rs)
 	for (int i = 1; i <= size; i++)
     SetNeuronState(i, rs.UniformRandom(lb, ub));
   // Fill the window with the first value
-  for (int i = 1; i <= size; i++)
-    for (int k = 1; k <= windowsize; k++)
-      outputhist[i][k] = NeuronOutput(i);
+//  for (int i = 1; i <= size; i++)
+//    for (int k = 1; k <= windowsize; k++)
+//      outputhist[i][k] = NeuronOutput(i);
 }
 
 void CTRNN::RandomizeCircuitOutput(double lb, double ub)
@@ -160,9 +150,9 @@ void CTRNN::RandomizeCircuitOutput(double lb, double ub)
 	for (int i = 1; i <= size; i++)
         SetNeuronOutput(i, UniformRandom(lb, ub));
   // Fill the window with the first value
-  for (int i = 1; i <= size; i++)
-    for (int k = 1; k <= windowsize; k++)
-      outputhist[i][k] = NeuronOutput(i);
+//  for (int i = 1; i <= size; i++)
+//    for (int k = 1; k <= windowsize; k++)
+//      outputhist[i][k] = NeuronOutput(i);
 }
 
 void CTRNN::RandomizeCircuitOutput(double lb, double ub, RandomState &rs)
@@ -170,9 +160,21 @@ void CTRNN::RandomizeCircuitOutput(double lb, double ub, RandomState &rs)
 	for (int i = 1; i <= size; i++)
     SetNeuronOutput(i, rs.UniformRandom(lb, ub));
   // Fill the window with the first value
-  for (int i = 1; i <= size; i++)
-    for (int k = 1; k <= windowsize; k++)
-      outputhist[i][k] = NeuronOutput(i);
+//  for (int i = 1; i <= size; i++)
+//    for (int k = 1; k <= windowsize; k++)
+//      outputhist[i][k] = NeuronOutput(i);
+}
+
+// Way to check if all the elements of the output array are now valid CTRNN outputs
+bool checkoutputhist(double array[], int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+      if(array[i] < 0)
+          return false; // return false at the first found
+
+  }
+  return true; //all elements checked
 }
 
 // Integrate a circuit one step using Euler integration.
@@ -193,22 +195,23 @@ void CTRNN::EulerStep(double stepsize)
   // Keep track of the running average of the outputs for some predetermined window of time.
   // 1. Update window
   for (int i = 1; i <= size; i++){
-    // Slide all the values down by one (effectively deleting the oldest one, and making run for a new one)
+    // Slide all the values down by one (effectively deleting the oldest one, and making room for a new one)
     for (int k = 1; k < windowsize; k++){
       outputhist[i][k] = outputhist[i][k+1];
     }
     // Add the new one at the end (in the empty space)
     outputhist[i][windowsize] = outputs[i];
   }
-  // 2. Take average
-  for (int i = 1; i <= size; i++){
-    avgoutputs[i] = 0.0;
-    for (int k = 1; k <= windowsize; k++){
-      avgoutputs[i] += outputhist[i][k];
+  // 2. Take average (unless the sliding window has not yet passed; in that case leave average in between ub and lb to turn HP off)
+  if (checkoutputhist(outputhist[1],windowsize)){
+    for (int i = 1; i <= size; i++){
+      avgoutputs[i] = 0.0;
+      for (int k = 1; k <= windowsize; k++){
+        avgoutputs[i] += outputhist[i][k];
+      }
+      avgoutputs[i] = avgoutputs[i]/windowsize;
     }
-    avgoutputs[i] = avgoutputs[i]/windowsize;
   }
-
   // NEW: Update rho for each neuron.
   for (int i = 1; i <= size; i++) {
     if (avgoutputs[i] < boundary[i]) {
