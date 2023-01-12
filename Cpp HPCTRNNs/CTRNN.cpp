@@ -87,10 +87,6 @@ void CTRNN::SetCircuitSize(int newsize, int newwindowsize, double b, double bt, 
 	weights.FillContents(0.0);
 	TempStates.SetBounds(1,size);
 	TempOutputs.SetBounds(1,size);
-	k1.SetBounds(1,size);
-	k2.SetBounds(1,size);
-	k3.SetBounds(1,size);
-	k4.SetBounds(1,size);
 
   // NEW
   rhos.SetBounds(1,size);
