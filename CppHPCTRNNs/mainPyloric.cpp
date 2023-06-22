@@ -9,8 +9,8 @@
 
 // Task params
 const double TransientDuration = 200; //in seconds
-const double RunDuration = 500; //in seconds
-const double StepSize = 0.05;
+const double RunDuration = 200; //in seconds
+const double StepSize = 0.01;
 const int RunSteps = RunDuration/StepSize; // in steps
 //const double Target = 1.0; //only needed for ROC
 
@@ -19,8 +19,8 @@ const int RunSteps = RunDuration/StepSize; // in steps
 //const double BIASNOISE = 1.0;
 
 // EA params
-const int POPSIZE = 20;
-const int GENS = 100;
+const int POPSIZE = 75;
+const int GENS = 200;
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -35,7 +35,7 @@ const int N = 3;
 const double WR = 16.0; 
 const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
 const double TMIN = 1; 
-const double TMAX = 5; 
+const double TMAX = 2; 
 
 // Plasticity parameters
 const int WS = 120;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
@@ -80,7 +80,9 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
 
-	TVector<double> OutputHistory(RunSteps,N);
+	TMatrix<double> OutputHistory;
+	OutputHistory.SetBounds(1,RunSteps,1,N);
+	OutputHistory.FillContents(0.0);
 	// TVector<double> CumRateChange(1,N);
 	double fitness = 0.0;
 	
@@ -126,36 +128,41 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 	TVector<double> minoutput(1,N);
 	minoutput.FillContents(1.0);
 
+	bool last = false;
+
 	// Run the circuit to calculate Pyloric fitness while HP is turned OFF.
 	OutputHistory.FillContents(0.0);
-	int k = 0;
+	int temp = 0;
 	for (double time = StepSize; time <= RunDuration; time += StepSize) {
-		k += 1;
+		temp += 1;
 		for (int i = 1; i <= N; i += 1) {
-			OutputHistory[k,i] = Agent.NeuronOutput(i);
+			OutputHistory[temp][i] = Agent.NeuronOutput(i);
 			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
 			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
 		}
 		Agent.EulerStep(StepSize);
 	}
+	int criteriamet = 0;
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
 		if (minoutput[i] <.45) {
 			if (maxoutput[i]>.5) {
 				fitness += 0.05;
+				criteriamet += 1;
 			}
 		}
 	}
-
-	if (fitness = 0.15){
+	
+	if (criteriamet == 3){
+		// cout << fitness << endl;
 		int PDstartcount = 0;
 		TVector<int> PDstarts(1,3);
 		PDstarts.FillContents(0);
 		//LOCATE SECOND TO LAST FULL CYCLE of PD
-		for (int step = RunSteps; step >= 1; step -= 1) {
+		for (int step = RunSteps; step >= 1; step --) {
 			if (PDstartcount < 3){
-				if (OutputHistory[step,3] > .5){
-					if (OutputHistory[step-1,3] < .5){
+				if (OutputHistory[step][3] > .5){
+					if (OutputHistory[step-1][3] < .5){
 						PDstarts[3-PDstartcount] = step;
 						PDstartcount += 1;
 					}
@@ -166,7 +173,7 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 			}
 		}
 		if (PDstartcount < 3){
-			cout << "unable to find two full cycles,may want to increase runtime or speed up slowest timescale"
+			cout << "unable to find two full cycles,may want to increase runtime or speed up slowest timescale" << endl;
 		}
 		else{
 			int PDend = 0;
@@ -176,62 +183,88 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 			int PYstart = 0;
 			int PYstartcount = 0;
 			int PYend = 0;
-			for (int step=PDstarts[1]; step<=PDstarts[2]; step += 1){
-				if (OutputHistory[step,3]>.5){
-					if (OutputHistory[step+1,3]<.5){
+			for (int step=PDstarts[1]; step<=PDstarts[2]; step ++){
+				if (OutputHistory[step][3]>.5){
+					if (OutputHistory[step+1][3]<.5){
 						PDend = step;
 					}
 				}
-				if (OutputHistory[step,1]<.5){
-					if (OutputHistory[step+1,1]>.5){
+				if (OutputHistory[step][1]<.5){
+					if (OutputHistory[step+1][1]>.5){
 						LPstart = step;
 						LPstartcount += 1;
 					}
 				}
-				if (OutputHistory[step,1]>.5){
-					if (OutputHistory[step+1,1]<.5){
-						LPend = step;
-					}
-				}
-				if (OutputHistory[step,2]<.5){
-					if (OutputHistory[step+1,2]>.5){
+				if (OutputHistory[step][2]<.5){
+					if (OutputHistory[step+1][2]>.5){
 						PYstart = step;
 						PYstartcount += 1;
 					}
 				}
-				if (OutputHistory[step,2]>.5){
-					if (OutputHistory[step+1,2]<.5){
+			}
+			for (int step=LPstart;step<=PDstarts[3];step++){
+				if (OutputHistory[step][1]>.5){
+					if (OutputHistory[step+1][1]<.5){
+						LPend = step;
+					}
+				}
+			}
+			for (int step=PYstart;step<=PDstarts[3];step++){
+				if (OutputHistory[step][2]>.5){
+					if (OutputHistory[step+1][2]<.5){
 						PYend = step;
 					}
 				}
 			}
 
-			if (PYstartcount = 1){
-				if (LPstartcount = 1){
+			if (PYstartcount == 1){
+				if (LPstartcount == 1){
 					// 	ORDERING CRITERIA
-					if (LPstart <= PYstart){fitness += 0.05;}
-					if (LPend <= PYend){fitness += 0.05;}
-					if (PDend <= LPstart){fitness += 0.05;}
-					if (fitness = 0.3){
+					if (LPstart <= PYstart){
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (LPend <= PYend){
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (PDend <= LPstart){
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (criteriamet == 6){
+						//cout << LPstart << ", " << LPend << ", " << PYstart <<", " << PYend << ", " <<PDstarts[1] << ", " <<PDend <<endl;
 						int period = PDstarts[2] - PDstarts[1];
-            			double LPdutycycle = (LPend-LPstart)/period; //burstduration/period
-						double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
-						double PYdutycycle = (PYend-PYstart)/period; //burstduration/period
-						double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
-						double PDdutycycle = (PDend-PDstart1)/period; //burstduration/period
-						double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
-						double LPstartphase = (LPstart-PDstart1)/period; //delay/period
-						double LPstartphasezscore = abs(LPstartphase - .533)/.054;
-						double PYstartphase = (PYstart-PDstart1)/period; //delay/period
-						double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+						double LPfoo = LPend - LPstart; 
+						double LPdutycycle = LPfoo/period; //burstduration/period
+						if ((LPend-LPstart)> period){
+							cout << "LPcycle>PERIOD "<< phenotype << endl;
+							cout << LPstart << ", " << LPend << ", " << PYstart <<", " << PYend << ", " <<PDstarts[1] << ", " <<PDend <<endl;
 
-						double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5.;
+						}
+						double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
+						double PYfoo = PYend-PYstart;
+						double PYdutycycle = PYfoo/period; //burstduration/period
+						double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
+						double PDfoo = PDend-PDstarts[1];
+						double PDdutycycle = PDfoo/period; //burstduration/period
+						double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
+						double LPbar = LPstart-PDstarts[1];
+						double LPstartphase = LPbar/period; //delay/period
+						double LPstartphasezscore = abs(LPstartphase - .533)/.054;
+						double PYbar = PYstart-PDstarts[1];
+						double PYstartphase = PYbar/period; //delay/period
+						double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+						//cout << "Period:" << period << endl;
+						//cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+						double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
 						fitness += 1/(average);
 					}
 				}
 			}
 			else{
-				cout << "possible multi-periodicity"
+				cout << "possible multi-periodicity" << endl;
+				// cout << "LPstartcount = " << LPstartcount << " ,PYstartcount = " << PYstartcount << endl;
 				// NO ORDERING POINTS FOR MULTIPERIODIC
 			}
 		}
@@ -243,93 +276,93 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 // ------------------------------------
 // Behavior
 // ------------------------------------
-void Behavior(TVector<double> &genotype)
-{
-	RandomState rs;
-	// Map genootype to phenotype
-	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
-	GenPhenMapping(genotype, phenotype);
+// void Behavior(TVector<double> &genotype)
+// {
+// 	RandomState rs;
+// 	// Map genootype to phenotype
+// 	TVector<double> phenotype;
+// 	phenotype.SetBounds(1, VectSize);
+// 	GenPhenMapping(genotype, phenotype);
 
-	ofstream nfile("neural.dat");
-	ofstream wfile("weights.dat");
-	ofstream bfile("biases.dat");
+// 	ofstream nfile("neural.dat");
+// 	ofstream wfile("weights.dat");
+// 	ofstream bfile("biases.dat");
 
-	// For each circuit, repeat the experiment for different TEMPERATURES (global pertubation)
-	for (double GP = -1.0; GP <= 1.0; GP += 0.5) {
+// 	// For each circuit, repeat the experiment for different TEMPERATURES (global pertubation)
+// 	for (double GP = -1.0; GP <= 1.0; GP += 0.5) {
 
-		// Create the agent
-		CTRNN Agent;
+// 		// Create the agent
+// 		CTRNN Agent;
 
-		// Instantiate the nervous system
-		Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
-		int k = 1;
-		// Time-constants
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronTimeConstant(i,phenotype(k));
-			k++;
-		}
-		// Bias
-		for (int i = 1; i <= N; i++) {
-			Agent.SetNeuronBias(i,phenotype(k)+GP);
-			k++;
-		}
-		// Weights
-		for (int i = 1; i <= N; i++) {
-				for (int j = 1; j <= N; j++) {
-					Agent.SetConnectionWeight(i,j,phenotype(k)+GP);
-					k++;
-				}
-		}
+// 		// Instantiate the nervous system
+// 		Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
+// 		int k = 1;
+// 		// Time-constants
+// 		for (int i = 1; i <= N; i++) {
+// 			Agent.SetNeuronTimeConstant(i,phenotype(k));
+// 			k++;
+// 		}
+// 		// Bias
+// 		for (int i = 1; i <= N; i++) {
+// 			Agent.SetNeuronBias(i,phenotype(k)+GP);
+// 			k++;
+// 		}
+// 		// Weights
+// 		for (int i = 1; i <= N; i++) {
+// 				for (int j = 1; j <= N; j++) {
+// 					Agent.SetConnectionWeight(i,j,phenotype(k)+GP);
+// 					k++;
+// 				}
+// 		}
 		
-		cout << Agent << endl; 
+// 		cout << Agent << endl; 
 		
-		// Initialize the state at an output of 0.5 for all neurons in the circuit
-		Agent.RandomizeCircuitOutput(0.5, 0.5);
+// 		// Initialize the state at an output of 0.5 for all neurons in the circuit
+// 		Agent.RandomizeCircuitOutput(0.5, 0.5);
 
-		// Run the circuit to calculate whether it's oscillating or not
-		for (double time = 0.0; time <= TransientDuration + RunDuration; time += StepSize) {
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				nfile << Agent.NeuronOutput(i) << " ";
-			}
-			nfile << endl;
-			for (int i = 1; i <= N; i += 1) {
-				bfile << Agent.NeuronBias(i) << " ";
-				for (int j = 1; j <= N; j += 1) {
-					wfile << Agent.ConnectionWeight(i,j) << " ";
-				}
-			}
-			bfile << endl;
-			wfile << endl;
-		}
+// 		// Run the circuit to calculate whether it's oscillating or not
+// 		for (double time = 0.0; time <= TransientDuration + RunDuration; time += StepSize) {
+// 			Agent.EulerStep(StepSize);
+// 			for (int i = 1; i <= N; i += 1) {
+// 				nfile << Agent.NeuronOutput(i) << " ";
+// 			}
+// 			nfile << endl;
+// 			for (int i = 1; i <= N; i += 1) {
+// 				bfile << Agent.NeuronBias(i) << " ";
+// 				for (int j = 1; j <= N; j += 1) {
+// 					wfile << Agent.ConnectionWeight(i,j) << " ";
+// 				}
+// 			}
+// 			bfile << endl;
+// 			wfile << endl;
+// 		}
 
-		// Turn plasticity ON
-		for (int i = 1; i <= N; i += 1) {
-			Agent.SetPlasticityBoundary(i,B);
-		}
+// 		// Turn plasticity ON
+// 		for (int i = 1; i <= N; i += 1) {
+// 			Agent.SetPlasticityBoundary(i,B);
+// 		}
 
-		// Run the circuit to calculate whether it's oscillating or not
-		for (double time = 0.0; time <= TransientDuration + RunDuration; time += StepSize) {
-			Agent.EulerStep(StepSize);
-			for (int i = 1; i <= N; i += 1) {
-				nfile << Agent.NeuronOutput(i) << " ";
-			}
-			nfile << endl;
-			for (int i = 1; i <= N; i += 1) {
-				bfile << Agent.NeuronBias(i) << " ";
-				for (int j = 1; j <= N; j += 1) {
-					wfile << Agent.ConnectionWeight(i,j) << " ";
-				}
-			}
-			bfile << endl;
-			wfile << endl;
-		}
-	}
-	nfile.close();
-	bfile.close();
-	wfile.close();
-}
+// 		// Run the circuit to calculate whether it's oscillating or not
+// 		for (double time = 0.0; time <= TransientDuration + RunDuration; time += StepSize) {
+// 			Agent.EulerStep(StepSize);
+// 			for (int i = 1; i <= N; i += 1) {
+// 				nfile << Agent.NeuronOutput(i) << " ";
+// 			}
+// 			nfile << endl;
+// 			for (int i = 1; i <= N; i += 1) {
+// 				bfile << Agent.NeuronBias(i) << " ";
+// 				for (int j = 1; j <= N; j += 1) {
+// 					wfile << Agent.ConnectionWeight(i,j) << " ";
+// 				}
+// 			}
+// 			bfile << endl;
+// 			wfile << endl;
+// 		}
+// 	}
+// 	nfile.close();
+// 	bfile.close();
+// 	wfile.close();
+// }
 
 // ------------------------------------
 // Rate of Change Fitness function (old)
@@ -426,8 +459,12 @@ void ResultsDisplay(TSearch &s)
 
 	// Save the genotype of the best individual
 	bestVector = s.BestIndividual();
+	GenPhenMapping(bestVector, phenotype);
+
+	bool last = true;
+
 	BestIndividualFile.open("best.gen.dat");
-	BestIndividualFile << bestVector << endl;
+	BestIndividualFile << bestVector << endl << phenotype << endl;
 	BestIndividualFile.close();
 }
 

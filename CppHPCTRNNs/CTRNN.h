@@ -121,5 +121,5 @@ class CTRNN {
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW
         TMatrix<double> outputhist; // NEW for AVERAGING
-        TVector<double> TempStates,TempOutputs,k1,k2,k3,k4;
+        TVector<double> TempStates,TempOutputs;
 };

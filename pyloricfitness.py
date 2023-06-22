@@ -11,7 +11,7 @@ initial_states = np.array([3.,3.,3.])  #initial states of the neurons
 dt=.01
 transientdur = 100 #in seconds
 transient = int(transientdur/dt) #in timesteps
-duration = 400 #time to simulate CTRNN for in seconds
+duration = 500 #time to simulate CTRNN for in seconds
 
 def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
     '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. 
@@ -28,11 +28,13 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
     C.resetStepcount()
     for i in range(len(C.time)):        #run the CTRNN for the allotted duration
         C.ctrnnstep(HP)
+    # C.plot()
     #check if first three neurons were oscillating (all the way from silent to burst) by the end of the run
     osc = np.zeros(3)
     for i in range(3):
-        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh+.025:
-            if min(C.ctrnn_record[i,transient:]) < burst_off_thresh-.025:
+        #print(max(C.ctrnn_record[i,transient:]),min(C.ctrnn_record[i,transient:]))
+        if max(C.ctrnn_record[i,transient:]) > burst_on_thresh:
+            if min(C.ctrnn_record[i,transient:]) < burst_on_thresh-.025:
                 osc[i] = 1
     #print(osc)
     fitness = sum(osc)*0.05 #initialize a fitness value based on how many neurons oscillate sufficiently
@@ -117,6 +119,8 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
         if PDend <= LPstart:
             fitness += 0.05
             #print('check3')
+        if debugging==True:
+            print("LP",LPstart,",",LPend," PY",PYstart,",",PYend," PD",PDstart1,',',PDend)
         #if all oscillating in the right order, award fitness for the duty cycle criteria being close to the mean observed in crabs
         if fitness == 0.3:
             period = PDstart2 - PDstart1
@@ -155,6 +159,7 @@ def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debuggi
     #check if all neurons were oscillating around the bursting threshold
     osc = np.zeros(3)
     for i in range(3):
+        print(max(C.ctrnn_record[i,transient:]),min(C.ctrnn_record[i,transient:]))
         if max(C.ctrnn_record[i,transient:]) > burst_on_thresh+.025:
             if min(C.ctrnn_record[i,transient:]) < burst_on_thresh-.025:
                 osc[i] = 1

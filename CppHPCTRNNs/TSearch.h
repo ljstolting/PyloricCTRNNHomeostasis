@@ -125,6 +125,7 @@ class TSearch {
 		double Performance(int i) {return Perf(i);};
 		double BestPerformance (void) {return BestPerf;};
 		TVector<double> &BestIndividual(void) {return bestVector;};
+		double AvgPerformance (void) {return AvgPerf;};
 		// Control
 		void InitializeSearch(void);
 		void ExecuteSearch(void);
