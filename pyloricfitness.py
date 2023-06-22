@@ -143,8 +143,14 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
             fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
     return fitness
 
+HPongenome = [.25,.25,.25,.75,.75,.75,40,20,1]
+def pyloriclikewithHP(neurongenome):
+    return(pyloriclike(neurongenome,HPgenome=HPongenome))
+
 def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
-    '''New, continuous pyloric fitness function without discrete requirements'''
+    '''New, continuous pyloric fitness function without discrete requirements. Simply does not award extra 
+    fitness for oscillation and ordering criteria. Does not check for ordering criteria. If all z-scores were
+    met, theoretically ordering criteria would be met, also.'''
     CTRNNsize = int(np.sqrt(1+len(neurongenome))-1)
     if np.all(HPgenome) == None:
         HPgenome = np.ones(2*CTRNNsize+3)
