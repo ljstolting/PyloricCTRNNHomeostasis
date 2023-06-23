@@ -13,7 +13,7 @@
 #SBATCH -A general
 
 #Load any modules that your program needs
-module load python
+#module load python
 
 #Run your program
 srun ./parallelevolution.py
