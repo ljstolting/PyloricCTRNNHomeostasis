@@ -8,7 +8,7 @@
 #SBATCH --mail-user=lstoltin@iu.edu
 #SBATCH --nodes=5
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=02:00:00
+#SBATCH --time=03:30:00
 #SBATCH --mem=16G
 #SBATCH -A general
 
@@ -16,4 +16,4 @@
 module load python
 
 #Run your program
-srun /N/u/lstoltin/Carbonate/src/PyloricCTRNNHomeostasis/parallelevolution.py
+srun ./parallelevolution.py
