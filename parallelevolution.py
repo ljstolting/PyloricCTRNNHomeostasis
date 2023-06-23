@@ -44,7 +44,7 @@ settings = {
 num_evolutions = 1
 
 generations = 50
-pop_size = 50
+pop_size = 25
 genotype_size = int(ctrnn_size**2+2*ctrnn_size)
 
 
