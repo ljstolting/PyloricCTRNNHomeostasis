@@ -33,9 +33,9 @@ ctrnn_params = np.random.rand(num_params)
 
 settings = {
    "ctrnn_size": ctrnn_size,
-   "ctrnn_step_size": 0.05,
+   "ctrnn_step_size": 0.01,
    "ctrnn_params": ctrnn_params,
-   "transient_steps": 1000,
+   "transient_steps": 10000,
 }
 
 ########################
