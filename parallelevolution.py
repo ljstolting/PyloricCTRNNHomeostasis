@@ -41,7 +41,7 @@ settings = {
 ########################
 # Evolve Solutions
 ########################
-num_evolutions = 1
+num_evolutions = 18
 
 generations = 50
 pop_size = 25
