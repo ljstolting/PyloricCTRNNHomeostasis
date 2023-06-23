@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 ########could someday add option to cut HP off at the designated boundaries or not###############
 
@@ -138,32 +138,32 @@ class CTRNN():
         for i in range(len(self.time)):
             self.ctrnnstep(adapt)
 
-    def plot(self):
-        if self.Size == 3:
-            labels = ["LP","PY","PD"]
-        else:
-            labels = range(self.Size)
-        for i in range(self.Size):
-            lab = str(labels[i])
-            plt.plot(self.time,self.ctrnn_record[i],label=lab)
-        plt.plot(self.time,.5*np.ones(len(self.time)))
-        plt.title("Neural Activity")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Firing Rate")
-        plt.rcParams["figure.figsize"] = (20,3)
-        plt.legend()
-        plt.show()
+    # def plot(self):
+    #     if self.Size == 3:
+    #         labels = ["LP","PY","PD"]
+    #     else:
+    #         labels = range(self.Size)
+    #     for i in range(self.Size):
+    #         lab = str(labels[i])
+    #         plt.plot(self.time,self.ctrnn_record[i],label=lab)
+    #     plt.plot(self.time,.5*np.ones(len(self.time)))
+    #     plt.title("Neural Activity")
+    #     plt.xlabel("Time (s)")
+    #     plt.ylabel("Firing Rate")
+    #     plt.rcParams["figure.figsize"] = (20,3)
+    #     plt.legend()
+    #     plt.show()
         
-    def plotparams(self):
-        for i in range(self.Size):
-            for j in range(self.Size):
-                idx = 3*i+j
-                lab = r'$w_{%s%s}$'%(i,j)
-                plt.plot(self.time,self.weight_record[i,j,:],label=r"w_{%s%s}"%(i,j))
-        for i in range(self.Size):
-            plt.plot(self.time,self.bias_record[i,:],label=r'$\theta_%s$'%i)
-        plt.plot("CTRNN Parameters")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Param. Value")
-        plt.legend()
-        plt.show()
+    # def plotparams(self):
+    #     for i in range(self.Size):
+    #         for j in range(self.Size):
+    #             idx = 3*i+j
+    #             lab = r'$w_{%s%s}$'%(i,j)
+    #             plt.plot(self.time,self.weight_record[i,j,:],label=r"w_{%s%s}"%(i,j))
+    #     for i in range(self.Size):
+    #         plt.plot(self.time,self.bias_record[i,:],label=r'$\theta_%s$'%i)
+    #     plt.plot("CTRNN Parameters")
+    #     plt.xlabel("Time (s)")
+    #     plt.ylabel("Param. Value")
+    #     plt.legend()
+    #     plt.show()

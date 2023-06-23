@@ -1,7 +1,7 @@
 #the evoltuion is now no longer general (keeps lbs and ubs in order & keeps the sliding window an integer)
 
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 def differentialapplication(wholegenome,boolean):
     '''turn off the application of HP in a specific genome. boolean is list of ones and zeros for whether 
@@ -33,13 +33,13 @@ class MicrobialHPCTRNN():
         self.bestHistory = np.zeros(generations)
         self.gen = 0
         self.diffapp = differentialapp #list of booleans
-    def showFitness(self):
-        plt.plot(self.bestHistory)
-        plt.plot(self.avgHistory)
-        plt.xlabel("Generations")
-        plt.ylabel("Fitness")
-        plt.title("Best and average fitness")
-        plt.show()
+    # def showFitness(self):
+    #     plt.plot(self.bestHistory)
+    #     plt.plot(self.avgHistory)
+    #     plt.xlabel("Generations")
+    #     plt.ylabel("Fitness")
+    #     plt.title("Best and average fitness")
+    #     plt.show()
 
     def fitStats(self):
         bestind = self.pop[np.argmax(self.fitness)]
@@ -125,13 +125,13 @@ class MicrobialCTRNN():
         self.avgHistory = np.zeros(generations)
         self.bestHistory = np.zeros(generations)
         self.gen = 0
-    def showFitness(self):
-        plt.plot(self.bestHistory)
-        plt.plot(self.avgHistory)
-        plt.xlabel("Generations")
-        plt.ylabel("Fitness")
-        plt.title("Best and average fitness")
-        plt.show()
+    # def showFitness(self):
+    #     plt.plot(self.bestHistory)
+    #     plt.plot(self.avgHistory)
+    #     plt.xlabel("Generations")
+    #     plt.ylabel("Fitness")
+    #     plt.title("Best and average fitness")
+    #     plt.show()
 
     def fitStats(self):
         bestind = self.pop[np.argmax(self.fitness)]
@@ -205,13 +205,13 @@ class MicrobialHP():
         self.bestHistory = np.zeros(generations)
         self.bestindHistory = np.zeros((generations,self.genesize))
         self.gen = 0
-    def showFitness(self):
-        plt.plot(self.bestHistory)
-        plt.plot(self.avgHistory)
-        plt.xlabel("Generations")
-        plt.ylabel("Fitness")
-        plt.title("Best and average fitness")
-        plt.show()
+    # def showFitness(self):
+    #     plt.plot(self.bestHistory)
+    #     plt.plot(self.avgHistory)
+    #     plt.xlabel("Generations")
+    #     plt.ylabel("Fitness")
+    #     plt.title("Best and average fitness")
+    #     plt.show()
 
     def fitStats(self):
         bestind = self.pop[np.argmax(self.fitness)]

@@ -11,7 +11,7 @@ initial_states = np.array([3.,3.,3.])  #initial states of the neurons
 dt=.01
 transientdur = 100 #in seconds
 transient = int(transientdur/dt) #in timesteps
-duration = 500 #time to simulate CTRNN for in seconds
+duration = 250 #time to simulate CTRNN for in seconds
 
 def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
     '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. 
@@ -23,6 +23,8 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
         HPgenome = np.ones(2*CTRNNsize+3)
         HPgenome[0:CTRNNsize] = 0
         HP = 0
+    else:
+        HP = 1
     C = CTRNN(CTRNNsize,dt,duration,HPgenome,neurongenome,specificpars)
     C.initializeState(initial_states)
     C.resetStepcount()
@@ -156,6 +158,8 @@ def pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debuggi
         HPgenome = np.ones(2*CTRNNsize+3)
         HPgenome[0:CTRNNsize] = 0
         HP = 0
+    else:
+        HP = 1
     C = CTRNN(CTRNNsize,dt,duration,HPgenome,neurongenome,specificpars)
     C.initializeState(initial_states)
     C.resetStepcount()
