@@ -30,8 +30,8 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
     C.resetStepcount()
     for i in range(len(C.time)):        #run the CTRNN for the allotted duration
         C.ctrnnstep(HP)
-    # if plotting:
-        # C.plot()
+    if plotting:
+        C.plot()
     #check if first three neurons were oscillating (all the way from silent to burst) by the end of the run
     osc = np.zeros(3)
     for i in range(3):
