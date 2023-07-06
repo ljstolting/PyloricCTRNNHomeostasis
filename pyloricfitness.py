@@ -13,7 +13,7 @@ transientdur = 100 #in seconds
 transient = int(transientdur/dt) #in timesteps
 duration = 250 #time to simulate CTRNN for in seconds
 
-def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False,plotting=False):
+def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False,reasoning=False,plotting=False):
     '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow]. 
     Output is its fitness as pyloric-like rhythm. Awards .05 for each oscillating neuron, and .05 for each 
     order critereon met. Then, if all order criteria met, adds (1/z-score) for each of 15 criteria in table 1'''
@@ -144,6 +144,9 @@ def pyloriclike(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=
                 print('LPstartphasezscore ',LPstartphasezscore)
                 print('PYstartphasezscore ',PYstartphasezscore)
             fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
+    else:
+        if reasoning:
+            print("one or more neurons static")
     return fitness
 
 HPongenome = [.25,.25,.25,.75,.75,.75,40,20,1]
